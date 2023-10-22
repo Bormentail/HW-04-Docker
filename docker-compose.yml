@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:alpine
+    container_name: postgres_container
+    restart: on-failure    
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./env.db
+
+
+  my_django:
+    image: bormentail/my_django
+    container_name: my_django_container
+    restart: on-failure    
+    command: gunicorn my_django.wsgi:application --bind 0.0.0.0:8000
+    expose:
+      - 8000
+    env_file:
+      - ./env.dev
+    depends_on:
+      - postgres
+
+
+  nginx:
+    build: ./nginx
+    ports:
+      - 1337:80
+    depends_on:
+      - my_django
+
+
+volumes:
+  postgres_data:
